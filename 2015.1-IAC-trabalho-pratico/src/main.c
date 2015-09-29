@@ -1,4 +1,5 @@
 #include <unistd.h>
+#include <sys/resource.h>
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <stdio.h>
@@ -7,9 +8,27 @@
 
 int main (int argc, char *argv[], char *envp[]) {
 
-int pid ; /* identificador de processo */
+int pid, i; /* identificador de processo */
+float pcpu;
 
+long double a[4], b[4], loadavg;
+FILE *fp;
+char dump[50], file_path[50] = "/proc/", str_pid[50], cpu_command[100] = "ps -p ";
+char path[50];
+char *memtotal = NULL;
+char * line = NULL;
+size_t len = 0;
+ssize_t read;
+struct rusage ru;
+long int ixrss;
+	   
 pid = fork () ; /* replicação do processo */
+
+sprintf(str_pid, "%d", pid);
+strcat(file_path, str_pid);
+strcat(file_path, "/status");
+strcat(ps_command, str_pid);
+strcat(ps_command, " -o %cpu | sed 1d");
 
 if ( pid < 0 ) { /* se fork não funcionou */
 	perror ("Erro: ") ;
@@ -17,6 +36,39 @@ if ( pid < 0 ) { /* se fork não funcionou */
 }
 else if( pid > 0 ) /* se sou o processo pai*/
 {
+	fp = fopen("/proc/meminfo","r");
+	while ((read = getline(&line, &len, fp)) != -1) {
+		if (!strncmp(line, "MemTotal:", 9))
+		{
+			memtotal = strdup(&line[17]);
+			printf("%s", strtok(memtotal, " "));
+		}
+	}
+	for (;;) {
+		fp = popen(ps_command,"r");
+		//fp = fopen(file_path,"r");
+		/*while ((read = getline(&line, &len, fp)) != -1) {
+			if (!strncmp(line, "VmRSS:", 6))
+			{
+				vmhwm = strdup(&line[6]);
+			}
+		}*/
+		while (fgets(path, sizeof(path)-1, fp) != NULL) {
+			for(i = 0; i < strlen(path);i++){
+				if(path[i] != ' '){
+					path[i-1] = path[i];
+				}
+			}
+			pcpu = atof(path);
+			printf("CPU: %.2f%%\n", pcpu);
+		}
+		fclose(fp);
+		
+		sleep(1);
+	}
+	if (line){
+		free(line);
+	}
 	//TODO guarde a cada segundo o consumo de memória (em Kilobytes) e CPU (em porcentagem) do processo filho
 	//TODO após 10 segundos de execução, mate o proceso filho
 }
@@ -27,8 +79,9 @@ else /* senão, sou o processo filho*/
 		for (;;) {}
 	} else if ( strcmp(argv[1], "cpu-mem") == 0 ){
 		//Código com uso intenso de memória e cpu
-		for (;;) {
-    	malloc(sizeof(100000));
+		for (i = 0;i < 100;i++) {
+			sleep(1);
+			malloc(10000000);
 		}
 	}
 	//TODO: apresentar uma mensagem de erro
