@@ -29,4 +29,5 @@ ylabel("Consumo CPU (%)", color="g")
 grid()
 
 xlabel("Tempo (s)")
+savefig("plots/"*Libc.strftime(Dates.time())) #Save the image plotted with the date and time as name
 show()
