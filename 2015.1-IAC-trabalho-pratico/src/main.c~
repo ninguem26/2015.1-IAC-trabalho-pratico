@@ -67,7 +67,7 @@ int main (int argc, char *argv[], char *envp[]) {
 	int pid = fork();
 
 	if ( pid < 0 ) {
-		perror ("Error: ");
+		perror ("Erro: ");
 		exit (-1);
 	}
 	else if ( pid > 0 ) {
@@ -109,7 +109,7 @@ int main (int argc, char *argv[], char *envp[]) {
 			consumeMemory();
 		}
 
-		fprintf(stderr, "Error: %s\n", strerror(22));
+		fprintf(stderr, "Erro: %s\n", strerror(22));
 		exit(22);
 	}
 
