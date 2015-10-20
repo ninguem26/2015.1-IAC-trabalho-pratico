@@ -20,6 +20,8 @@ Para usar as funcionalidades de gráficos, é necessário ter as ferramentas Jul
 
 ###[Julia](julialang.org)
 
+Comandos para adição do repositório e instalação do Julia:
+
 ```
 sudo add-apt-repository ppa:staticfloat/juliareleases
 sudo add-apt-repository ppa:staticfloat/julia-deps
