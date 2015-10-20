@@ -117,5 +117,5 @@ A partir do instante 1, os valores passam a variar entre 21.75% e 27%. Essa vari
 - Funcionalidades de geração de gráfico:
   - Script Julia para geração de gráficos usando PyPlot;
   - Parâmetro ```plot``` que solicita a geração do gráfico;
-    - Exemplo: ``` ./main cpu-mem plot```
+    - Exemplo: ``` ./bin cpu-mem plot```
   - Todos os gráficos gerados são salvos no diretório ```plots```, ordenados por data;
