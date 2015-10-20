@@ -7,86 +7,104 @@
 #include <sys/sysinfo.h>
 #include <pthread.h>
 
-#define NUCLEOS get_nprocs_conf() //Total CPU cores
+//Number of processors
+#define PROCS get_nprocs_conf()
 
 //Global general purpose iterator
 int i;
 
-void consumeCPU() {
-	for (;;) {}
+//High CPU load function
+void consume_cpu() {
+    for (;;) {}
 }
 
-void *consumeCPU_thread(void *threadid)
-{
-  for(;;){}
+//High CPU load function for the thread
+void *consume_cpu_thread(void *threadid) {
+    for (;;) {}
 }
 
-void consumeMemory() {
-	//Thread to the continuous CPU usage
-	pthread_t thread;
-	pthread_create(&thread, NULL, consumeCPU_thread, (void *)1);
-
-	for(;;){
-		malloc(1024); //Each loop allocates 1024 bytes in memory
+//Function with high CPU use and memory allocation
+void consume_memory() {
+    //A thread uses CPU...
+    pthread_t thread;
+	pthread_create(&thread, NULL, consume_cpu_thread, (void *)1);
+    
+    //While the process alocates memory
+	for (;;) {
+		malloc(1024);
 		usleep(100);
 	}
 }
 
-//CPU: ps -p <PID> -o pcpu | sed 1d | tr -d ' '
-double getCpuUsage(int pid){
-	char comando[50];
+//Returns a double with the CPU percentage used by the children process
+double get_cpu_usage(int pid) {    
+	char command[50];
 	FILE *fp; //Pointer to the file reading returned by popen
-	double porcentagem;
+	double percentage;
 
-	sprintf(comando, "%s%d%s", "ps -p ", pid, " -o pcpu | sed 1d | tr -d ' '");
-	fp = popen(comando, "r");
-	fscanf(fp, "%lf", &porcentagem);
+    //Mount the command used to get cpu usage with sprintf()
+    //ps -p <PID> -o pcpu | sed 1d | tr -d ' '
+	sprintf(command, "%s%d%s", "ps -p ", pid, " -o pcpu | sed 1d | tr -d ' '");
+    
+	fp = popen(command, "r");
+
+	fscanf(fp, "%lf", &percentage);
 	fclose(fp);
 
-	return porcentagem/NUCLEOS;
+	return percentage/PROCS;
 }
 
-//Memory: pmap <PID> -x | grep total | awk '{print $4}'
-int getMemoryUsage(int pid){
-	char comando[50];
-	FILE *fp; //Pointer to the file reading returned by popen
-	int memoria;
+/*
+    Returns a int with the memory used by the children process in kilobytes
+    It works just like get_cpu_usage()
+*/
+int get_memory_usage(int pid) {
+	char command[50];
+	FILE *fp;
+	int memory;
 
-	sprintf(comando, "%s%d%s", "pmap ", pid, " -x | grep total | awk '{print $4}'");
-	fp = popen(comando, "r");
-	fscanf(fp, "%d", &memoria);
+    //pmap <PID> -x | grep total | awk '{print $4}'
+	sprintf(command, "%s%d%s", "pmap ", pid, " -x | grep total | awk '{print $4}'");
+    
+	fp = popen(command, "r");
+    
+	fscanf(fp, "%d", &memory);
 	fclose(fp);
 
-	return memoria;
+	return memory;
 }
 
 int main (int argc, char *argv[], char *envp[]) {
 
 	system("clear");
 
+    //Creates a children process and gets its PID
 	int pid = fork();
 
-	if ( pid < 0 ) {
+    //If the PID returned by the fork() function is less than 0, something went wrong on creating the children process and the error message is shown and the program is terminated with code -1
+	if (pid < 0) {
 		perror ("Error: ");
 		exit (-1);
-	}
-	else if ( pid > 0 ) {
+	} else if (pid > 0) {
+        //The PID is bigger than 0 if it is not the children proccess
+        
 		struct sysinfo info;
-		sysinfo( &info );
+		sysinfo(&info);
 
 		FILE *logFile, *plotFile; //Pointers to log.txt and plot.txt files
+        
 		logFile = fopen("log.txt", "w"); //Opening log.txt with write permission
 		plotFile = fopen("plot.txt", "w"); //Opening plot.txt with write permission
 
 		printf("PID: %d\n", pid); //PID of the child process
-		printf("Número de núcleos: %d\n", NUCLEOS);
-		printf("Memória total: %lu MB\n\n", ((size_t)info.totalram * (size_t)info.mem_unit)/(1024*1024)); //Total primary memory
+		printf("Processors numbers: %d\n", PROCS);
+		printf("Total memory: %lu MB\n\n", ((size_t)info.totalram * (size_t)info.mem_unit)/(1024*1024)); //Total primary memory
 
-		printf("Tempo\tCPU\tMemória\n");
+		printf("Time\tCPU\tMemory\n");
 
-		for (i = 0; i <= 10; i++){
-			double cpuUsage = getCpuUsage(pid);
-			int memoryUsage = getMemoryUsage(pid);
+		for (i = 0; i <= 10; i++) {
+			double cpuUsage = get_cpu_usage(pid);
+			int memoryUsage = get_memory_usage(pid);
 
 			printf("%ds\t%.2lf%%\t%d kB\n", i, cpuUsage, memoryUsage);
 
@@ -102,19 +120,24 @@ int main (int argc, char *argv[], char *envp[]) {
 		kill(pid, SIGKILL); //Kill the child process
 	}
 	else {
-
-		if (strcmp(argv[1], "cpu") == 0 ) {
-			consumeCPU();
-		} else if ( strcmp(argv[1], "cpu-mem") == 0 ) {
-			consumeMemory();
-		}
-
+        //PID is 0 if it is the children proccess
+        
+		if (strcmp(argv[1], "cpu") == 0) 
+			consume_cpu();
+		else if (strcmp(argv[1], "cpu-mem") == 0)
+			consume_memory();
+		
+        //Invalid parameter code error
 		fprintf(stderr, "Error: %s\n", strerror(22));
 		exit(22);
 	}
 
+    /* 
+        Extra parameter: plot
+        It generates, shows and saves the chart with the execution values
+    */
 	if (argc == 3)
-		if (strcmp(argv[2], "plot") == 0 ){
+		if (strcmp(argv[2], "plot") == 0 ) {
 			printf("\nGenerating chart\n");
 			system("julia plot.jl");
 	}
@@ -122,4 +145,3 @@ int main (int argc, char *argv[], char *envp[]) {
 	exit(0); /* Terminates the process successfully (code 0) */
 
 }
-
