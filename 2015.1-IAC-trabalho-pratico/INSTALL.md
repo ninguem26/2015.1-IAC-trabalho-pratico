@@ -31,12 +31,12 @@ sudo apt-get install julia
 
 A bibliteca [Matplotlib](http://matplotlib.org/) é necessária para a geração dos gráficos. O sistema usado para o desenvolvimento (Ubuntu 14.04.3) já possui a biblioteca, mas caso seja necessária a instalação: 
 
-  ```sudo apt-get install python-matplotlib```
+``` sudo apt-get install python-matplotlib ```
 
 ###[PyPlot](https://github.com/stevengj/PyPlot.jl)
 
 Dentro do terminal interativo Julia, executar o seguinte comando:
 
-```Pkg.add("PyPlot")```
+``` Pkg.add("PyPlot") ```
 
 Após a configuração, o programa pode ser executado como no primeiro tópico.
