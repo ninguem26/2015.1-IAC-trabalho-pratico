@@ -12,7 +12,7 @@ Para executar o código, executar o seguinte comando:
 ./bin <arg>
 ```
 
-Sendo <arg> um dos dois possíveis parâmetros:
+Sendo ```<arg>``` um dos dois possíveis parâmetros:
 
 - ```cpu```: alto uso de processamento;
 - ```cpu-mem```: alto processamento e memória.
