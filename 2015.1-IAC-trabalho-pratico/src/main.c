@@ -97,7 +97,7 @@ int main (int argc, char *argv[], char *envp[]) {
 		plotFile = fopen("plot.txt", "w"); //Opening plot.txt with write permission
 
 		printf("PID: %d\n", pid); //PID of the child process
-		printf("Processors numbers: %d\n", PROCS);
+		printf("Processors number: %d\n", PROCS);
 		printf("Total memory: %lu MB\n\n", ((size_t)info.totalram * (size_t)info.mem_unit)/(1024*1024)); //Total primary memory
 
 		printf("Time\tCPU\tMemory\n");
@@ -128,7 +128,7 @@ int main (int argc, char *argv[], char *envp[]) {
 			consume_memory();
 		
         //Invalid parameter code error
-		fprintf(stderr, "Error: %s\n", strerror(22));
+		fprintf(stderr, "Error: %s\n\n", strerror(22));
 		exit(22);
 	}
 
