@@ -1,5 +1,4 @@
-#Teaching
+# 2015.1-IAC-trabalho-pratico
 
-##Naming
-
-[year].[semester]-[class]-[subject]
+### [Anthony Jatobá](https://github.com/anthonyjatoba)
+### [Júlio César](https://github.com/ninguem26)
