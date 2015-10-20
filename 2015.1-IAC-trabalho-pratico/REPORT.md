@@ -37,18 +37,18 @@ Percebe-se que o uso de memória manteve-se constante do início ao fim da execu
 
 Já o uso de UCP tem um comportamento mais interessante:
 
-No instante 0 o uso da UCP pelo processo filho é de 0%, pois o mesmo ainda não executou a função ```consumeCPU()```.
+No instante 0 o uso da UCP pelo processo filho é de 0%, pois o mesmo ainda não executou a função ```consume_cpu()```.
 
 Após um segundo de execução, o processador atinge a marca de aproximados 25%. O processador usado no experimento possui 4 núcleos lógicos, dos quais apenas um é completamente usado pelo programa, daí o valor.
 
-Essa porcentagem é mantida até o final da execução, o que indica que houve poucas ou nenhuma interrupção durante a execução do programa. Caso houvesse outros processos CPU-bound em execução, o sistema operacional poderia escalonar o uso dos recursos, apresentando um comportamento distinto do apresentado.
+Essa porcentagem é mantida até o final da execução, o que indica que houve poucas ou nenhuma interrupção durante a execução do programa. Caso outros processos solicitassem uso de UCP durante a execuçãoexecução, o sistema operacional poderia administrar o uso dos recursos, apresentando valores e gráfico distintos do apresentado.
 
 ## Utilização intensa da UCP e memória
 O segundo caso, por sua vez, exige uso intenso tanto da UCP, quanto da memória.
 
 ### Adaptando função para uso intenso de UCP e Memória
 
-Para realizar esta parte do experimento o seguinte trecho de código foi provido:
+Para realizar esta parte do experimento, o seguinte trecho de código foi sugerido:
 
 ```c
 for(;;){
@@ -57,7 +57,8 @@ for(;;){
 ```
 
 Este código garante uso intenso da UCP através do ```for loop``` infinito, ao mesmo tempo que aloca rapidamente memória, intensificando o uso da mesma.
-Porém, seu uso apresenta certos sintomas colaterais para o funcionamento da máquina que o executa, sendo o mais agravante o travamento da máquina após ter alocado uma quantidade considerável de RAM. Para contornar este problema foi reduzida a quantidade de memória a ser alocada pelo ```malloc()``` e foi adicionada a função ```usleep()``` ao código. Esta função pausa a thread que a executa por um tempo ‘x’ em milissegundos. O novo código:
+
+No entanto, em nossas execuções, o trecho causou travamento do computador, por alocar toda a memória disponível. O mesmo foi percebido pelos colegas de curso. Para contornar este problema, o total de memória a ser alocada foi limitado pela função ```usleep()```, que gera interrupções em milissegundos ao processador, que agora solicita alocação de memória numa frequência muito menor que antes:
 
 ```c
 for(;;){
@@ -66,8 +67,9 @@ for(;;){
 }
 ```
 
-Agora o loop passou a alocar apenas 1024 bytes a cada 100ms. No entanto os resultados passaram a apresentar uma redução no consumo da UCP ao executar este trecho do código. Isso passou a ocorrer por conta do ```usleep()```, pois ao pausar o processo por um curto período de tempo, a UCP deixa de executá-lo.
-Deste modo, para manter o consumo de UCP, foi criada uma thread exclusivamente para chamar a função ```*consumeUCP_thread(void *threadid)```. Esta função é semelhante a ```consumeUCP()```, no entanto ela recebe um ponteiro como parâmetro, que é o id da thread. O código da função e do loop passaram a ser assim:
+Agora o código aloca uma quantidade bem menor de memória, numa progressão constante. No entanto, os resultados passaram a apresentar uma redução no consumo da UCP por conta do ```usleep()```, que interrompe a execução do processo pela UCP. 
+
+Para manter a alta carga de processamento, foi criada uma thread para usar o processador enquanto o processo filho segue alocando memória. A thread usa a função ```*consume_cpu_thread(void *threadid)```, que é uma adaptação da ```consume_cpu()``` para o uso da thread.
 
 ```c
 void *consumeUCP_thread(void *threadid)
@@ -86,13 +88,13 @@ void consumeMemory() {
 }
 ```
 
-Desta maneira o consumo de UCP manteve-se intenso ao executar o código, mesmo com o ```usleep()```. O loop foi implementado em uma função ```consumeMemory()```.
+Desta maneira o consumo de UCP manteve-se intenso durante a execução do código.
 
-Com a função para consumo intenso de UCP e memória implementada, o código foi executado mais uma vez e o resultado obtido pode ser conferido na imagem abaixo:
+Com a função para consumo intenso de UCP e memória implementada, o código foi executado com o parâmetro ```cpu-mem``` e o resultado obtido pode ser conferido na imagem abaixo:
 
 ![Saída no terminal para o experimento de UCP e Memória](images/cpu-mem-terminal.png)
 
-Estes dados ilustram o seguinte gráfico, plotado em Julia com o PyPlot:
+Estes dados são ilustrados pelo seguinte gráfico:
 
 ![Gráfico UCP e Memória](images/cpu-mem-plot.png)
 
